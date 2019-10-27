@@ -4,6 +4,7 @@ node_modules/
 # Untracked files:
 guests.js
 lodgings.js
+localCredentials.json
 
 # Compiled source #
 ###################

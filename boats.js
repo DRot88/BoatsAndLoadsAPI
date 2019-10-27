@@ -19,10 +19,24 @@ function post_boat(name, type, length){
   return datastore.save({"key":key, "data":new_boat}).then(() => {return key});
 }
 
+// VIEW A BOAT
+
+function get_boat(boat_id){
+  const key = datastore.key([BOAT, parseInt(boat_id)]);
+  return datastore.get(key).then( (entity) => {
+      if (entity[0] === undefined) {
+        return '';
+      }
+      return entity.map(ds.fromDatastore)[0];
+  });
+}
+
+
 /* ------------- End Boat Model Functions ------------- */
 
 /* ------------- Begin Boat Controller Functions ------------- */
 
+// CREATE A BOAT
 router.post('/', function(req, res){
   // const fullUrl = req.protocol + '://' + req.get('host') + req.url;
   const fullUrl = `${req.protocol}://${req.get('host')}${req.url}boats/`;
@@ -43,6 +57,23 @@ router.post('/', function(req, res){
       "self": fullUrl + key.id
     })} 
   );
+});
+
+// VIEW A BOAT
+
+router.get('/:boat_id', function(req, res){
+  const specificBoat = req.params.boat_id; // gets the id of the boat
+  get_boat(specificBoat)
+  .then( (boat) => {
+    if (boat) {
+      if(!boat.loads) {
+        boat.loads = [];
+      }
+      boat.self = `${req.protocol}://${req.get('host')}/boats${req.url}`
+      return res.status(200).json(boat);
+    }
+    return res.status(404).json({"Error": "No boat with this boat_id exists"});
+  })
 });
 
 /* ------------- End Boat Controller Functions ------------- */

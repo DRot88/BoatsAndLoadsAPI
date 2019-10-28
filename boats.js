@@ -42,9 +42,9 @@ function get_all_boats(req){
   return datastore.runQuery(q)
     .then( (entities) => {
       console.log("Entities: ", entities);
-      console.log("Entities[0]", entities[0]);
-      console.log("Entities[1]", entities[1]);
-      console.log("Entities[2]", entities[2]);
+      // console.log("Entities[0]", entities[0]);
+      // console.log("Entities[1]", entities[1]);
+      // console.log("Entities[2]", entities[2]);
       results.boats = entities[0].map(ds.fromDatastore);
       if(entities[1].moreResults !== ds.Datastore.NO_MORE_RESULTS ){
         results.next = req.protocol + "://" + req.get("host") + req.baseUrl + "?cursor=" + entities[1].endCursor;
@@ -53,14 +53,12 @@ function get_all_boats(req){
   });
 }
 
-// function get_all_boats(){
-// 	const q = datastore.createQuery(BOAT);
-// 	return datastore.runQuery(q).then( (entities) => {
-// 			return entities[0].map(ds.fromDatastore);
-// 		});
-// }
+// DELETE A BOAT
 
-
+function delete_boat(boat_id){
+  const key = datastore.key([BOAT, parseInt(boat_id,10)]);
+  return datastore.delete(key);
+}
 
 
 /* ------------- End Boat Model Functions ------------- */
@@ -115,6 +113,20 @@ router.get('/', function(req, res){
 	.then( (boats) => {
         res.status(200).json(boats);
     });
+});
+
+// DELETE A BOAT
+
+router.delete('/:boat_id', function(req, res){
+  get_boat(req.params.boat_id)
+  .then((boat) => {
+    // console.log("Boat in Delete: ", boat);
+    if(boat === '') {
+      return res.status(404).json({"Error": "No boat with this boat_id exists"});
+    } else {
+      delete_boat(req.params.boat_id).then(res.status(204).end())
+    }
+  });
 });
 
 /* ------------- End Boat Controller Functions ------------- */

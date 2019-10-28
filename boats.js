@@ -31,6 +31,37 @@ function get_boat(boat_id){
   });
 }
 
+// VIEW ALL BOATS
+
+function get_all_boats(req){
+  var q = datastore.createQuery(BOAT).limit(3);
+  const results = {};
+  if(Object.keys(req.query).includes("cursor")){
+      q = q.start(req.query.cursor);
+  }
+  return datastore.runQuery(q)
+    .then( (entities) => {
+      console.log("Entities: ", entities);
+      console.log("Entities[0]", entities[0]);
+      console.log("Entities[1]", entities[1]);
+      console.log("Entities[2]", entities[2]);
+      results.boats = entities[0].map(ds.fromDatastore);
+      if(entities[1].moreResults !== ds.Datastore.NO_MORE_RESULTS ){
+        results.next = req.protocol + "://" + req.get("host") + req.baseUrl + "?cursor=" + entities[1].endCursor;
+      }
+    return results;
+  });
+}
+
+// function get_all_boats(){
+// 	const q = datastore.createQuery(BOAT);
+// 	return datastore.runQuery(q).then( (entities) => {
+// 			return entities[0].map(ds.fromDatastore);
+// 		});
+// }
+
+
+
 
 /* ------------- End Boat Model Functions ------------- */
 
@@ -76,6 +107,16 @@ router.get('/:boat_id', function(req, res){
   })
 });
 
+// VIEW ALL BOATS
+
+// GET to get all boats
+router.get('/', function(req, res){
+  get_all_boats(req)
+	.then( (boats) => {
+        res.status(200).json(boats);
+    });
+});
+
 /* ------------- End Boat Controller Functions ------------- */
 
-module.exports = router;
+module.exports = router;  

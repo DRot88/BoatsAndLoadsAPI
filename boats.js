@@ -7,6 +7,7 @@ const ds = require('./datastore');
 const datastore = ds.datastore;
 
 const BOAT = "Boat";
+const LOAD = "Load";
 
 router.use(bodyParser.json());
 
@@ -60,6 +61,38 @@ function delete_boat(boat_id){
   return datastore.delete(key);
 }
 
+// ADD LOAD TO BOAT
+
+function put_load(boat_id, load_id){
+  const boat_key = datastore.key([BOAT, parseInt(boat_id,10)]);
+  return datastore.get(boat_key)
+  .then( (boat) => {
+      if( typeof(boat[0].loads) === 'undefined'){
+        console.log("boat[0].loads: ", boat[0].loads)
+          boat[0].loads = [];
+      }
+      boat[0].loads.push(load_id);
+      return datastore.save({"key":boat_key, "data":boat[0]});
+  });
+}
+
+// VIEW ALL LOADS ON BOAT
+
+function get_boat_loads(req, boat_id){
+  const key = datastore.key([BOAT, parseInt(boat_id,10)]);
+  return datastore.get(key)
+  .then( (boats) => {
+      const boat = boats[0];
+      const load_keys = boat.loads.map( (load_id) => {
+          return datastore.key([LOAD, parseInt(load_id,10)]);
+      });
+      return datastore.get(load_keys);
+  })
+  .then((loads) => {
+      loads = loads[0].map(ds.fromDatastore);
+      return loads;
+  });
+}
 
 /* ------------- End Boat Model Functions ------------- */
 
@@ -126,6 +159,22 @@ router.delete('/:boat_id', function(req, res){
     } else {
       delete_boat(req.params.boat_id).then(res.status(204).end())
     }
+  });
+});
+
+// ADD LOAD TO BOAT
+
+router.put('/:boat_id/loads/:load_id', function(req, res){
+  put_load(req.params.boat_id, req.params.load_id)
+  .then(res.status(204).end());
+});
+
+// VIEW ALL LOADS ON BOAT
+
+router.get('/:boat_id/loads', function(req, res){
+  const boats = get_boat_loads(req, req.params.boat_id)
+.then( (boats) => {
+      res.status(200).json(boats);
   });
 });
 

@@ -51,6 +51,14 @@ function get_all_loads(req){
   });
 }
 
+// DELETE A LOAD
+
+function delete_load(load_id){
+  const key = datastore.key([LOAD, parseInt(load_id,10)]);
+  return datastore.delete(key);
+}
+
+
 /* ------------- End Load Model Functions ------------- */
 
 /* ------------- Begin Load Controller Functions ------------- */
@@ -102,6 +110,20 @@ router.get('/', function(req, res){
 	.then( (loads) => {
         res.status(200).json(loads);
     });
+});
+
+// DELETE A LOAD
+
+router.delete('/:load_id', function(req, res){
+  get_load(req.params.load_id)
+  .then((load) => {
+    // console.log("Boat in Delete: ", boat);
+    if(load === '') {
+      return res.status(404).json({"Error": "No load with this load_id exists"});
+    } else {
+      delete_load(req.params.load_id).then(res.status(204).end())
+    }
+  });
 });
 
 /* ------------- End Load Controller Functions ------------- */
